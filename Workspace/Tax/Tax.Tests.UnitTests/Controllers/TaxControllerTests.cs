@@ -35,10 +35,26 @@ namespace Tax.Tests.UnitTests.Controllers
             Assert.IsNotType<LocalRedirectResult>(result);
         }
 
-        [Fact(Skip = "To be done by you, remove Skip property in the Fact attribute to be able to run this method and see it in text explorer")]
+        [Fact]
         public async Task GetTax_ValidData_ReturnsViewResults()
         {
-            // TODO try to stub all dependencies inside GetTax Action inside Tax Controller :)
+           int year = 2000;
+            string userId = "userid";
+
+            var userManagerStub = new Mock<UserManager<ApplicationUser>>(new Mock<IUserStore<ApplicationUser>>().Object, null, null, null, null, null, null, null, null);
+            var logger = new Mock<ILogger<TaxController>>();
+            var userTaxRepo = new Mock<IUserTaxRepository>();
+            var taxService = new Mock<ITaxService>();
+
+            userManagerStub.Setup(x => x.GetUserAsync(null)).ReturnsAsync(new ApplicationUser { Id = userId });
+
+            userTaxRepo.Setup(x => x.GetUserTax(userId, year)).Returns(Task.FromResult(new UserTax { UserId = userId, Year = year, NumberOfChildren = 1, TaxDueAmount = 10, TotalIncome = 6000, CharityPaidAmount = 10 }));
+
+            TaxController taxController = new TaxController(userManagerStub.Object, logger.Object, userTaxRepo.Object, taxService.Object);
+
+            var result = await taxController.GetTax(year);
+            
+            Assert.IsAssignableFrom<IActionResult>(result);
         }
     }
 }
